@@ -29,4 +29,5 @@ dependencies {
     compile 'com.google.code.gson:gson:2.8.2'
     compile 'ai.api:libai:1.6.11'
     compile 'commons-io:commons-io:2.4'
+    compile 'com.google.android.gms:play-services-vision:9.4.0'
 }
