@@ -1,6 +1,5 @@
 package com.android.thelightmarshmallow.myeye;
 
-import android.content.Context;
 import android.content.Intent;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
@@ -21,6 +20,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.Locale;
 
 import ai.api.android.AIConfiguration;
 import ai.api.android.AIService;
@@ -39,35 +39,34 @@ public class MainActivity extends AppCompatActivity implements AIDialog.AIDialog
     private AIService aiService;
     private AIDialog aiDialog;
     private Gson gson= GsonFactory.getGson();
-    private TextToSpeech mytts;
+    private TextToSpeech textToSpeech;
+
+    public void toSpeak(String s){
+               textToSpeech.speak(s,TextToSpeech.QUEUE_FLUSH,null);
+           }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        textToSpeech=new TextToSpeech(this, new TextToSpeech.OnInitListener() {
+            @Override
+            public void onInit(int i) {
+                                if(i!=TextToSpeech.ERROR) {
+                                        textToSpeech.setLanguage(Locale.UK);
+                                    }
+                          }
+        });
 
-
-        audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
-        releseMediaPlayer();
-        int result = audioManager.requestAudioFocus(mOnAudioFocusChangeListener,
-                AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN_TRANSIENT);
-        if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
-
-            mMediaplayer = MediaPlayer.create(MainActivity.this, R.raw.heyhowcan);
-            mMediaplayer.start();
-            mMediaplayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-                @Override
-                public void onCompletion(MediaPlayer mediaplayer) {
-                    releseMediaPlayer();
-                }
-            });
-        }
         final AIConfiguration config = new AIConfiguration("54dfcfaad0c1426c8b2429edcefacb08",
                 AIConfiguration.SupportedLanguages.English,
                 AIConfiguration.RecognitionEngine.System);
 
         aiDialog= new AIDialog(this, config);
         aiDialog.setResultsListener(this);
-
+        toSpeak("Hello");
+        toSpeak("welcome to my eye app");
+        toSpeak("tap the mic button to let me know how can i help you");
 
       /*  aiService = AIService.getService(this, config);
         aiService.setListener(new AIListener() {
@@ -129,30 +128,6 @@ public class MainActivity extends AppCompatActivity implements AIDialog.AIDialog
             aiService.resume();
         }
     }
-    private AudioManager.OnAudioFocusChangeListener mOnAudioFocusChangeListener = new AudioManager.OnAudioFocusChangeListener(){
-        @Override
-        public void onAudioFocusChange(int FocusChange) {
-
-            if(FocusChange==AudioManager.AUDIOFOCUS_LOSS_TRANSIENT||FocusChange==AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK){
-                mMediaplayer.pause();
-                mMediaplayer.seekTo(0);
-
-            }
-            else if(FocusChange==AudioManager.AUDIOFOCUS_GAIN){
-                mMediaplayer.start();
-            }
-            else if(FocusChange==AudioManager.AUDIOFOCUS_LOSS){
-                releseMediaPlayer();
-            }
-        }
-    };
-    private void releseMediaPlayer(){
-        if(mMediaplayer!=null){
-            mMediaplayer.release();
-
-            mMediaplayer=null;
-            audioManager.abandonAudioFocus(mOnAudioFocusChangeListener);}
-    }
 
     @Override
     public void onResult(final AIResponse result) {
@@ -164,9 +139,14 @@ public class MainActivity extends AppCompatActivity implements AIDialog.AIDialog
                 Log.v("json response",gson.toJson(result));
                 //Toast.makeText(MainActivity.this,gson.toJson(result),Toast.LENGTH_SHORT).show();
                 //now we'll have to define further actions on the basis of the type of action
-                if(result.getResult().getAction().toString().equals("camera")){
+                String s= result.getResult().getAction().toString();
+                if(s.equals("camera")){
+                    toSpeak("Opening Q R code scanner");
                     Toast.makeText(MainActivity.this,"inside runOnUi",Toast.LENGTH_SHORT).show();
                     BarCodedetection();
+                }
+                else{
+
                 }
 
             }
@@ -196,9 +176,13 @@ public class MainActivity extends AppCompatActivity implements AIDialog.AIDialog
             if(requestCode== CommonStatusCodes.SUCCESS){
                 if(data!=null){
                     Barcode barcode = data.getParcelableExtra("barcode");
-                    Toast.makeText(this,barcode.displayValue,Toast.LENGTH_SHORT).show();
+                    //Toast.makeText(this,barcode.displayValue,Toast.LENGTH_SHORT).show();
                     item_id=barcode.displayValue;
-                    //Toast.makeText(this,,Toast.LENGTH_LONG).show();
+                    Toast.makeText(this,barcode.displayValue +" \nproduct name: Marigold Biscuit"+"" +
+                            " \n M.R.P : 10"+" \n Packed on: 16-09-17"+" Best before: 6 months",Toast.LENGTH_LONG).show();
+                toSpeak(barcode.displayValue);
+                toSpeak("Marigold biscuit");
+                toSpeak(" best before 6 months");
                 }
                 else{
                     Toast.makeText(this,"failure",Toast.LENGTH_SHORT).show();
